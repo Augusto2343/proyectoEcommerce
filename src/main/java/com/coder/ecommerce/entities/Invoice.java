@@ -7,7 +7,10 @@ import java.util.List;
 
 @Data
 @Entity
+//Definimos la tabla
+
 @Table(name = "INVOICE")
+
 public class Invoice {
     public Invoice (String createdAt, double total){
         this.createdAt = createdAt;
@@ -21,7 +24,7 @@ public class Invoice {
     @Column(name = "TOTAL", nullable = false)
     private double total;
 
-
+    //Definimos las relaciones
     @ManyToOne(fetch=FetchType.LAZY)
     private Client client;
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

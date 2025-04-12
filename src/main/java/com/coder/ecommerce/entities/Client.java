@@ -6,9 +6,12 @@ import java.util.List;
 
 @Data
 @Entity
+//Definimos la tabla
+
 @Table(name = "CLIENT")
 
 public class Client {
+
     public Client(String name, String lastname, long docnumber) {
         this.name = name;
         this.lastname = lastname;
@@ -24,7 +27,7 @@ public class Client {
     @Column(name = "DOCNUMBER", nullable = false)
     private long docnumber;
 
-
+    //Definimos las relaciones
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Invoice> invoice;
 }

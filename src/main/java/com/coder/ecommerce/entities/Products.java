@@ -7,6 +7,8 @@ import java.util.List;
 
 @Data
 @Entity
+//Definimos la tabla
+
 @Table(name = "PRODUCTS")
 public class Products {
     public Products(String description, String code, double price, int stock) {
@@ -26,6 +28,8 @@ public class Products {
     private double price;
     @Column(name = "STOCK", nullable = false)
     private int stock;
+    
+    //Definimos las relaciones
 
     @OneToMany(mappedBy = "product")
     private List<InvoiceDetails> invoice_details;
