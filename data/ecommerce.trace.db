@@ -1,0 +1,4 @@
+2025-04-10 10:37:14.813749-03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Error de Sintaxis en sentencia SQL "DROP TABLE IF EXISTS [*]'products'"; se esperaba "identifier"
+Syntax error in SQL statement "DROP TABLE IF EXISTS [*]'products'"; expected "identifier"; SQL statement:
+DROP TABLE IF EXISTS 'products' [42001-232]
