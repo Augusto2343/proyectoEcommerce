@@ -2,16 +2,18 @@ package com.coder.ecommerce.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Entity
 //Definimos la tabla
-
+@NoArgsConstructor
 @Table(name = "INVOICE")
 
 public class Invoice {
+
     public Invoice (String createdAt, double total){
         this.createdAt = createdAt;
         this.total = total;

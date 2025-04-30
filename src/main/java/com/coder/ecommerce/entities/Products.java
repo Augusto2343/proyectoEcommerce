@@ -2,21 +2,16 @@ package com.coder.ecommerce.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Entity
 //Definimos la tabla
-
+@NoArgsConstructor
 @Table(name = "PRODUCTS")
 public class Products {
-    public Products(String description, String code, double price, int stock) {
-        this.description = description;
-        this.code = code;
-        this.price = price;
-        this.stock = stock;
-    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -31,6 +26,6 @@ public class Products {
     
     //Definimos las relaciones
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL)
     private List<InvoiceDetails> invoice_details;
 }

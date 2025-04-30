@@ -2,13 +2,14 @@ package com.coder.ecommerce.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 //Definimos la tabla
 
-@Table(name = "INVOICE_DETAILS")
-
+@Table(name = "invoice_details")
+@NoArgsConstructor
 public class InvoiceDetails {
     public InvoiceDetails(int amount, double price){
         this.amount = amount;
@@ -18,9 +19,9 @@ public class InvoiceDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public long id;
-    @Column(name = "AMOUNT", nullable = false)
+    @Column(name = "amount", nullable = false)
     public int amount;
-    @Column(name = "PRICE", nullable = false)
+    @Column(name = "price", nullable = false)
     public double price;
 
     //Definimos las relaciones
