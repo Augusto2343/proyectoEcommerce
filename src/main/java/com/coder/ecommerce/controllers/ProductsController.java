@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -19,35 +20,24 @@ public class ProductsController {
 
     @GetMapping
     public ResponseEntity<List<Products>> findAll(){
-        return ResponseEntity.ok(this.productService.findAll());
+        return ResponseEntity.ok(productService.findAll());
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Products> findById(@PathVariable Long id){
+        return ResponseEntity.ok(productService.findById(id));
     }
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Products> save(@RequestBody Products products){
-        try{
-            Products newProducts = this.productService.save(products);
-            return ResponseEntity.created(URI.create("/products/"+ newProducts.getId())).body(newProducts);
-        }catch(Exception error){
-            System.out.println(error.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-
+        return ResponseEntity.ok(productService.save(products));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Optional<Products>> update(@PathVariable Long id,@RequestBody Products product){
-        Optional<Products> productOptional = this.productService.update(id, product);
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(productOptional);
+    public ResponseEntity <Products> update(@PathVariable Long id,@RequestBody Products product){
+        return ResponseEntity.ok(productService.update(id, product));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<Optional<Products>> delete(@PathVariable Long id){
-        Optional<Products> productOptional= this.productService.delete(id);
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(productOptional);
+    public ResponseEntity <Products> delete(@PathVariable Long id){
+        return ResponseEntity.ok(productService.delete(id));
     }
 
 }

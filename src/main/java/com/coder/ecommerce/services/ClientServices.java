@@ -6,35 +6,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ClientServices {
     @Autowired
-    private ClientRepositories clientsRepository;
+    private ClientRepositories clientsRepositories;
     public Client save(Client client){
-        return this.clientsRepository.save(client);
+        return this.clientsRepositories.save(client);
     }
-    public List<Client> findAll(){return this.clientsRepository.findAll();}
-    public Optional<Client> update(Long id, Client client){
-        Optional<Client> clientOptional = this.clientsRepository.findById(id);
-        if(clientOptional.isEmpty()){
-            return Optional.empty();
+    public List<Client> findAll(){
+        return this.clientsRepositories.findAll();
+    }
+
+    public Client findById(Long id){
+        return clientsRepositories.findById(id).orElse(null);
+    }
+    public Client update(Long id, Client client){
+        Client clientToUpdate = clientsRepositories.findById(id).orElse(null);
+        if(clientToUpdate ==null){
+            return null;
         }
-        clientOptional.get().setName(client.getName());
-        clientOptional.get().setLastname(client.getLastname());
-        clientOptional.get().setDocnumber(client.getDocnumber());
-        this.clientsRepository.save(clientOptional.get());
-        return clientOptional;
+        clientToUpdate.setName(clientToUpdate.getName());
+        client.setLastname(clientToUpdate.getLastname());
+        client.setDocnumber(clientToUpdate.getDocnumber());
+        clientsRepositories.save(client);
+        return clientToUpdate;
 
     }
-    public Optional<Client> delete(Long id){
-        Optional<Client> clientOptional = this.clientsRepository.findById(id);
-        if(clientOptional.isEmpty()){
-            return Optional.empty();
+    public Client delete(Long id) {
+        Client clientToDelete = clientsRepositories.findById(id).orElse(null);
+        if (clientToDelete==null) {
+            return null;
         }
-        this.clientsRepository.delete(clientOptional.get());
+        clientsRepositories.delete(clientToDelete);
 
-        return clientOptional;
+        return clientToDelete;
     }
 }

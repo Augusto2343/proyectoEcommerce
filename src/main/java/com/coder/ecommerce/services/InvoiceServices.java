@@ -1,6 +1,7 @@
 package com.coder.ecommerce.services;
 
 import com.coder.ecommerce.entities.Invoice;
+import com.coder.ecommerce.entities.InvoiceDetails;
 import com.coder.ecommerce.repositories.InvoiceRepositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,33 +9,36 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 public class InvoiceServices {
     @Autowired
     private InvoiceRepositories invoicesRepository;
-    public Invoice save(Invoice invoice){
-        return this.invoicesRepository.save(invoice);
+    public Invoice save(Invoice invoice){return invoicesRepository.save(invoice);}
+    public List<Invoice> findAll(){return invoicesRepository.findAll();}
+    public Invoice findById(Long id){return invoicesRepository.findById(id).orElse(null);}
+    public List<Invoice> findInvoicesByClientId(Long clientId) {
+        return invoicesRepository.findByClientId(clientId);
     }
-    public List<Invoice> findAll(){return this.invoicesRepository.findAll();}
-    public Optional<Invoice> update(Long id, Invoice invoice){
-        Optional<Invoice> invoiceOptional = this.invoicesRepository.findById(id);
-        if(invoiceOptional.isEmpty()){
-            return Optional.empty();
+    public Invoice update(Long id, Invoice invoice){
+        Invoice invoiceToUpdate = invoicesRepository.findById(id).orElse(null);
+        if(invoiceToUpdate==null){
+            return null;
         }
-        invoiceOptional.get().setCreatedAt(invoice.getCreatedAt());
-        invoiceOptional.get().setTotal(invoice.getTotal());
+        invoiceToUpdate.setCreatedAt(invoiceToUpdate.getCreatedAt());
+        invoiceToUpdate.setTotal(invoiceToUpdate.getTotal());
 
-        this.invoicesRepository.save(invoiceOptional.get());
-        return invoiceOptional;
+        invoicesRepository.save(invoiceToUpdate);
+        return invoiceToUpdate;
 
     }
-    public Optional<Invoice> delete(Long id){
-        Optional<Invoice> invoiceOptional = this.invoicesRepository.findById(id);
-        if(invoiceOptional.isEmpty()){
-            return Optional.empty();
+    public Invoice delete(Long id){
+        Invoice invoiceToDelete = invoicesRepository.findById(id).orElse(null);
+        if(invoiceToDelete == null){
+            return null;
         }
-        this.invoicesRepository.delete(invoiceOptional.get());
+        invoicesRepository.delete(invoiceToDelete);
 
-        return invoiceOptional;
+        return invoiceToDelete;
     }
 }

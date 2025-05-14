@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -14,18 +16,15 @@ import java.util.List;
 public class Products {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @Column(name = "DESCRIPTION", nullable = false)
+    private Long id;
+    @Column( nullable = false)
     private String description;
-    @Column(name = "CODE", nullable = false)
+    @Column( nullable = false)
     private String code;
-    @Column(name = "PRICE", nullable = false)
+    @Column( nullable = false)
     private double price;
-    @Column(name = "STOCK", nullable = false)
+    @Column( nullable = false)
     private int stock;
-    
-    //Definimos las relaciones
-
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL)
-    private List<InvoiceDetails> invoice_details;
+    @OneToMany(mappedBy = "products", cascade = CascadeType.ALL)
+    private List<InvoiceDetails> invoiceDetails = new ArrayList<>();
 }

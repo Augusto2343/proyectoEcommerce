@@ -3,6 +3,11 @@ package com.coder.ecommerce.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -11,26 +16,22 @@ import lombok.NoArgsConstructor;
 @Table(name = "invoice_details")
 @NoArgsConstructor
 public class InvoiceDetails {
-    public InvoiceDetails(int amount, double price){
-        this.amount = amount;
-        this.price = price;
-    }
-    
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public long id;
-    @Column(name = "amount", nullable = false)
-    public int amount;
-    @Column(name = "price", nullable = false)
-    public double price;
+    private Long id;
+    @Column( nullable = false)
+    private int amount;
 
-    //Definimos las relaciones
+    private double price;
 
-    @ManyToOne(fetch=FetchType.LAZY)
-    private Products product;
-
-    @ManyToOne(fetch=FetchType.LAZY)
-    private Invoice invoice;
-
-}
+    @Column(nullable = false)
+    private Long idProducto;
+    @OneToMany(mappedBy = "invoice_details_id", cascade = CascadeType.ALL)
+    private List<Invoice> invoices = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_product", nullable = false)
+    private Products products;
+    }
 

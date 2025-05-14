@@ -3,7 +3,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Entity
@@ -13,23 +17,19 @@ import java.util.List;
 
 public class Client {
 
-    public Client(String name, String lastname, long docnumber) {
-        this.name = name;
-        this.lastname = lastname;
-        this.docnumber = docnumber;
-    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "NAME", nullable = false)
+    @Column( nullable = false)
     private String name;
-    @Column(name = "LASTNAME", nullable = false)
+    @Column( nullable = false)
     private String lastname;
-    @Column(name = "DOCNUMBER", nullable = false)
-    private long docnumber;
-
-    //Definimos las relaciones
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Invoice> invoice;
+    @Column( nullable = false)
+    private Long docnumber;
+    @Column(nullable = false)
+    private List<Long> invoiceIds= new ArrayList<>();
+    @OneToMany(mappedBy = "client_id", cascade = CascadeType.ALL)
+    private List<Invoice> invoices = new ArrayList<>();
 }
+
 
