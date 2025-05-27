@@ -27,6 +27,7 @@ public class ClientServices {
         if(clientToUpdate ==null){
             return null;
         }
+        clientToUpdate.setInvoiceIds(client.getInvoiceIds().size()>0 ? client.getInvoiceIds() : clientToUpdate.getInvoiceIds());
         clientToUpdate.setName(clientToUpdate.getName());
         client.setLastname(clientToUpdate.getLastname());
         client.setDocnumber(clientToUpdate.getDocnumber());

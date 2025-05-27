@@ -1,4 +1,7 @@
 package com.coder.ecommerce.entities;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,17 +21,25 @@ import java.util.stream.Collectors;
 public class Client {
 
     @Id
+    @JsonProperty(access= JsonProperty.Access.READ_ONLY)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @Column( nullable = false)
     private String name;
+
     @Column( nullable = false)
     private String lastname;
+
     @Column( nullable = false)
     private Long docnumber;
-    @Column(nullable = false)
+
+    @Schema( accessMode = Schema.AccessMode.READ_ONLY)
     private List<Long> invoiceIds= new ArrayList<>();
-    @OneToMany(mappedBy = "client_id", cascade = CascadeType.ALL)
+
+    @JsonIgnore
+    @Schema( hidden = true)
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private List<Invoice> invoices = new ArrayList<>();
 }
 

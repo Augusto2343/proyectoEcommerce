@@ -25,9 +25,10 @@ public class InvoiceServices {
         if(invoiceToUpdate==null){
             return null;
         }
-        invoiceToUpdate.setCreatedAt(invoiceToUpdate.getCreatedAt());
-        invoiceToUpdate.setTotal(invoiceToUpdate.getTotal());
-
+        invoiceToUpdate.setCreatedAt(invoice.getCreatedAt());
+        invoiceToUpdate.setTotal(invoice.getTotal());
+        invoiceToUpdate.setIdDelCliente(invoice.getIdDelCliente());
+        invoiceToUpdate.setIdInvoiceDetails(invoice.getIdInvoiceDetails());
         invoicesRepository.save(invoiceToUpdate);
         return invoiceToUpdate;
 

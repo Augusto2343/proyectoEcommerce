@@ -1,5 +1,8 @@
 package com.coder.ecommerce.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,19 +22,32 @@ public class InvoiceDetails {
 
 
     @Id
+    @Schema(readOnly = true)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column( nullable = false)
     private int amount;
 
-    private double price;
+    @Schema(readOnly = true)
+    private Double price;
 
     @Column(nullable = false)
     private Long idProducto;
-    @OneToMany(mappedBy = "invoice_details_id", cascade = CascadeType.ALL)
-    private List<Invoice> invoices = new ArrayList<>();
+
+    @Schema( accessMode = Schema.AccessMode.READ_ONLY)
+    private List<Long> invoiceIds = new ArrayList<>();
+
+    @JsonIgnore
+    @Schema( hidden = true)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_product", nullable = false)
+    @JoinColumn(name = "product_id", nullable = true)
     private Products products;
+
+    @JsonIgnore
+    @Schema( hidden = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice", nullable = true)
+    private Invoice invoice;
     }
 

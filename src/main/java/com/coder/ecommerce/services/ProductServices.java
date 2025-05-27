@@ -25,10 +25,14 @@ public class ProductServices {
             if(products==null){
                 return null;
                 }
+            if(product == null){
+                return null;
+            }
+            products.setInvoiceDetailsIds(product.getInvoiceDetailsIds());
             products.setDescription(products.getDescription());
-            products.setCode(products.getCode());
-            products.setPrice(products.getPrice());
-            products.setStock(products.getStock());
+            products.setCode(product.getCode());
+            products.setPrice(product.getPrice());
+            products.setStock(product.getStock());
             this.productsRepository.save(products);
             return products;
         }
