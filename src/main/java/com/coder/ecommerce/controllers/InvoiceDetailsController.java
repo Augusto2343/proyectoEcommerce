@@ -173,16 +173,16 @@ public class InvoiceDetailsController {
             if (oldProduct == null || newProduct == null) {
                 return ResponseEntity.badRequest().build();
             }
-            for (Long invoiceId : invoiceDetails.getInvoiceIds()) {
-                if(!invoiceDetailsActual.getInvoiceIds().contains(invoiceId)) {
-                    invoiceDetailsActual.getInvoiceIds().add(invoiceId);
-                }
+            if(invoiceDetails.getInvoiceIds().size() == 0){
+              invoiceDetailsActual.setInvoiceIds(invoiceDetails.getInvoiceIds());
             }
-            int unidadPorFactua = invoiceDetails.getAmount() == 0 ?
+
+
+            int unidadPorFactura = invoiceDetails.getAmount() == 0 ?
                     invoiceDetails.getAmount():
                     invoiceDetailsActual.getAmount();
 
-            newAmount = unidadPorFactua * invoiceDetailsActual.getInvoiceIds().size();
+            newAmount = unidadPorFactura *invoiceDetailsActual.getInvoiceIds().size() ;
 
             // Restablecer stock del producto viejo
             oldProduct.setStock(oldProduct.getStock() + oldAmount);
@@ -202,7 +202,7 @@ public class InvoiceDetailsController {
             restTemplate.put("http://localhost:5000/products/{id}", newProduct, newProductId);
 
             // Actualizar el InvoiceDetails
-            invoiceDetailsActual.setAmount(newAmount);
+            invoiceDetailsActual.setAmount(invoiceDetailsActual.getAmount());
             invoiceDetailsActual.setIdProducto(newProductId);
 
 

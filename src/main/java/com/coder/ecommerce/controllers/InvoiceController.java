@@ -300,6 +300,10 @@ public class InvoiceController {
             }
         }
         else{
+
+                if(oldI == null){
+                    return ResponseEntity.ok().build();
+                }
             try{
 
                 oldI.setIdInvoiceDetails(invoice.getIdInvoiceDetails());
@@ -360,16 +364,15 @@ public class InvoiceController {
                             invoiceDetailsId
                     );
                     invoiceDetails.getInvoiceIds().remove(invoiceToDelete.getId());
-                    invoiceDetails.setPrice(invoiceDetails.getPrice());
-                    invoiceDetails.setAmount(invoiceDetails.getAmount());
-                    invoiceDetails.setIdProducto(invoiceDetails.getIdProducto());
                     try{restTemplate.put(
                             "http://localhost:5000/invoice-details/{id}",
                             invoiceDetails,
                             invoiceDetailsId
                     );}
                     catch (Exception e){
-                        System.out.println(invoiceDetails);
+                        System.out.println(invoiceToDelete);
+                        e.printStackTrace();
+                        return  ResponseEntity.badRequest().build();
                     }
                 }
                 return ResponseEntity.ok(invoiceServices.delete(id));
