@@ -1,5 +1,6 @@
 package com.coder.ecommerce.controllers;
 
+import com.coder.ecommerce.entities.Invoice;
 import com.coder.ecommerce.entities.InvoiceDetails;
 import com.coder.ecommerce.entities.Products;
 import com.coder.ecommerce.services.InvoiceDetailsServices;
@@ -15,7 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 @Tag(name="Endpoint invoice details", description = "CRUD de invoice details de la tienda")
 
 @RestController
@@ -143,6 +147,7 @@ public class InvoiceDetailsController {
     )
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InvoiceDetails> update(@PathVariable Long id, @RequestBody InvoiceDetails invoiceDetails) {
+        System.out.println(invoiceDetails);
         try {
             InvoiceDetails invoiceDetailsActual = invoiceDetailsServices.findById(id);
             if (invoiceDetailsActual == null) return ResponseEntity.notFound().build();
@@ -152,7 +157,7 @@ public class InvoiceDetailsController {
             Long oldProductId = invoiceDetailsActual.getIdProducto();
             Long newProductId = invoiceDetails.getIdProducto();
             int oldAmount = invoiceDetailsActual.getAmount();
-            int newAmount = invoiceDetails.getAmount() == 0 ?invoiceDetailsActual.getAmount() * invoiceDetails.getInvoiceIds().size() : invoiceDetails.getAmount();
+            int newAmount = invoiceDetails.getAmount() == 0 ?invoiceDetailsActual.getAmount() * invoiceDetails.getInvoiceIds().size() : invoiceDetails.getAmount() * invoiceDetails.getInvoiceIds().size();
 
             // Validaciones iniciales
             if (newAmount < 0 || newProductId == null) {
@@ -168,6 +173,16 @@ public class InvoiceDetailsController {
             if (oldProduct == null || newProduct == null) {
                 return ResponseEntity.badRequest().build();
             }
+            for (Long invoiceId : invoiceDetails.getInvoiceIds()) {
+                if(!invoiceDetailsActual.getInvoiceIds().contains(invoiceId)) {
+                    invoiceDetailsActual.getInvoiceIds().add(invoiceId);
+                }
+            }
+            int unidadPorFactua = invoiceDetails.getAmount() == 0 ?
+                    invoiceDetails.getAmount():
+                    invoiceDetailsActual.getAmount();
+
+            newAmount = unidadPorFactua * invoiceDetailsActual.getInvoiceIds().size();
 
             // Restablecer stock del producto viejo
             oldProduct.setStock(oldProduct.getStock() + oldAmount);
@@ -189,6 +204,8 @@ public class InvoiceDetailsController {
             // Actualizar el InvoiceDetails
             invoiceDetailsActual.setAmount(newAmount);
             invoiceDetailsActual.setIdProducto(newProductId);
+
+
 
             return ResponseEntity.ok(invoiceDetailsServices.update(id, invoiceDetailsActual));
 
@@ -214,7 +231,7 @@ public class InvoiceDetailsController {
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<InvoiceDetails> delete(@PathVariable Long id) {
-        InvoiceDetails invoiceDetails = invoiceDetailsServices.findById(id); // NO lo elimines aún
+        InvoiceDetails invoiceDetails = invoiceDetailsServices.findById(id);
         if (invoiceDetails == null) {
             return ResponseEntity.notFound().build();
         }
@@ -248,7 +265,25 @@ public class InvoiceDetailsController {
                     product,
                     invoiceDetails.getIdProducto()
             );
-
+            if(invoiceDetails.getInvoiceIds().size()==0){
+                return ResponseEntity.ok(invoiceDetailsServices.delete(id));
+            }
+            for (Long invoiceId : invoiceDetails.getInvoiceIds()) {
+                Invoice invoice = restTemplate.getForObject(
+                        "http://localhost:5000/invoices/{id}",
+                        Invoice.class,
+                        invoiceId
+                );
+                invoice.getIdInvoiceDetails().remove(invoiceDetails.getId());
+                invoice.setIdDelCliente(invoice.getIdDelCliente());
+                System.out.println(invoice.getIdInvoiceDetails());
+                String url = "http://localhost:5000/invoices/{id}?deleting={deleting}";
+                Map<String,Object> params = new HashMap<>();
+                params.put("id",invoiceId);
+                params.put("invoice",invoice);
+                params.put("deleting",true);
+                restTemplate.put(url,invoice,invoiceId,params);
+            }
             return ResponseEntity.ok(invoiceDetailsServices.delete(id));
 
         } catch (Exception error) {

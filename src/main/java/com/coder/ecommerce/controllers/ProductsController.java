@@ -112,6 +112,7 @@ public class ProductsController {
     )
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Products> update(@PathVariable Long id, @RequestBody Products product) {
+
         try{
             Products productToUpdate = productService.findById(id);
             if(productToUpdate==null){

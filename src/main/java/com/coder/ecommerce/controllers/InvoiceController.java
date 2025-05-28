@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -108,15 +109,6 @@ public class InvoiceController {
                     if( invoiceDetails == null ){
                         return ResponseEntity.notFound().build();
                     }
-
-                    invoiceDetails.getInvoiceIds().add(invoice.getId());
-                    invoiceDetails.setPrice(invoiceDetails.getPrice());
-                    invoiceDetails.setAmount(invoiceDetails.getAmount());
-                    restTemplate.put(
-                            "http://localhost:5000/invoice-details/{id}",
-                            invoiceDetails,
-                            invoiceDetailsId
-                    );
                     if(invoiceDetails.getPrice() == null){
                         return ResponseEntity.badRequest().build();
                     }
@@ -129,6 +121,21 @@ public class InvoiceController {
                 invoice.setCreatedAt(new Date());
 
                 Invoice savedInvoice = invoiceServices.save(invoice);
+                for (Long invoiceDetailsId : invoice.getIdInvoiceDetails()) {
+                    InvoiceDetails invoiceDetails = restTemplate.getForObject(
+                            "http://localhost:5000/invoice-details/{id}",
+                            InvoiceDetails.class,
+                            invoiceDetailsId
+                    );
+                    invoiceDetails.getInvoiceIds().add(invoice.getId());
+                    invoiceDetails.setPrice(invoiceDetails.getPrice());
+                    invoiceDetails.setAmount(invoiceDetails.getAmount());
+                    restTemplate.put(
+                            "http://localhost:5000/invoice-details/{id}",
+                            invoiceDetails,
+                            invoiceDetailsId
+                    );
+                }
                 existingClient.getInvoiceIds().add(savedInvoice.getId());
                 restTemplate.put(
                         "http://localhost:5000/clients/{id}",
@@ -137,7 +144,9 @@ public class InvoiceController {
                 );
 
                 existingClient.setInvoiceIds(existingClient.getInvoiceIds());
-                return ResponseEntity.ok(invoiceServices.save(invoice));
+
+
+                return ResponseEntity.ok(invoice);
             }catch(Exception error){
                 error.printStackTrace();
                 return ResponseEntity.badRequest().build();
@@ -162,17 +171,18 @@ public class InvoiceController {
             }
     )
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<Invoice>  update(@PathVariable Long id, @RequestBody Invoice invoice) {
+        public ResponseEntity<Invoice>  update(@PathVariable Long id, @RequestBody Invoice invoice, @RequestParam(defaultValue = "false") String deleting) {
         Invoice oldI = invoiceServices.findById(id);
-        try {
-            Double total = 0.0;
-            int stockSolicitado =0;
-            Invoice oldInvoice = invoiceServices.findById(id);
-            RestTemplate restTemplate = new RestTemplate();
-            if( ( invoice.getIdDelCliente() == null && invoice.getIdInvoiceDetails().size() == 0) || (invoice.getIdDelCliente() == oldInvoice.getIdDelCliente() && invoice.getIdInvoiceDetails() == oldInvoice.getIdInvoiceDetails())) {
-                return ResponseEntity.badRequest().build();
-            }
-            if (oldInvoice.getIdDelCliente() != invoice.getIdDelCliente() && invoice.getIdDelCliente() != null) {
+        if(deleting =="false") {
+            try {
+                Double total = 0.0;
+                int stockSolicitado = 0;
+                Invoice oldInvoice = invoiceServices.findById(id);
+                RestTemplate restTemplate = new RestTemplate();
+                if ((invoice.getIdDelCliente() == null && invoice.getIdInvoiceDetails().size() == 0) || (invoice.getIdDelCliente().equals(oldInvoice.getIdDelCliente()) && invoice.getIdInvoiceDetails().equals(oldInvoice.getIdInvoiceDetails()))) {
+                    return ResponseEntity.badRequest().build();
+                }
+                if (oldInvoice.getIdDelCliente() != invoice.getIdDelCliente() && invoice.getIdDelCliente() != null) {
 
                     //Obtener el cliente antiguo
                     Client oldClient = restTemplate.getForObject(
@@ -194,11 +204,14 @@ public class InvoiceController {
 
                     //Actualizar el cliente antiguo
                     oldClient.getInvoiceIds().remove(oldInvoice.getId());
+
                     restTemplate.put(
                             "http://localhost:5000/clients/{id}",
                             oldClient,
                             oldClient.getId()
                     );
+
+
                     //Actualizar el cliente nuevo
                     newClient.getInvoiceIds().add(invoice.getId());
                     restTemplate.put(
@@ -208,74 +221,96 @@ public class InvoiceController {
                     );
                 }
 
-            //Confirmar si se cambió el invoiceDetailsId
-            if (invoice.getIdInvoiceDetails() != null &&
-                    !invoice.getIdInvoiceDetails().equals(oldInvoice.getIdInvoiceDetails())) {
-                if (oldInvoice.getIdInvoiceDetails().size() > 0) {
-                    for (Long invoiceDetailsId : oldInvoice.getIdInvoiceDetails()) {
-                        try{
-                            InvoiceDetails oldDetail = restTemplate.getForObject(
-                                    "http://localhost:5000/invoice-details/{id}",
-                                    InvoiceDetails.class,
-                                    invoiceDetailsId
-                            );
+                //Confirmar si se cambió el invoiceDetailsId
+                if (invoice.getIdInvoiceDetails() != null &&
+                        !invoice.getIdInvoiceDetails().equals(oldInvoice.getIdInvoiceDetails())) {
+                    if (oldInvoice.getIdInvoiceDetails().size() > 0) {
+                        for (Long invoiceDetailsId : oldInvoice.getIdInvoiceDetails()) {
+                            try {
+                                InvoiceDetails oldDetail = restTemplate.getForObject(
+                                        "http://localhost:5000/invoice-details/{id}",
+                                        InvoiceDetails.class,
+                                        invoiceDetailsId
+                                );
+                                if (oldDetail == null) {
+                                    oldInvoice.getIdInvoiceDetails().remove(invoiceDetailsId);
+                                } else {
+                                    oldDetail.getInvoiceIds().remove(oldInvoice.getId());
+                                    oldDetail.setPrice(oldDetail.getPrice());
 
-                            oldDetail.getInvoiceIds().remove(oldInvoice.getId());
-                            oldDetail.setPrice(oldDetail.getPrice());
-                            restTemplate.put(
-                                    "http://localhost:5000/invoice-details/{id}",
-                                    oldDetail,
-                                    oldDetail.getId()
-                            );
+                                    restTemplate.put(
+                                            "http://localhost:5000/invoice-details/{id}",
+                                            oldDetail,
+                                            oldDetail.getId()
+                                    );
+                                }
+
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+
                         }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-
-
                     }
                 }
-            }
-            for (Long invoiceDetailsId : invoice.getIdInvoiceDetails()) {
-                InvoiceDetails newDetail = restTemplate.getForObject(
-                        "http://localhost:5000/invoice-details/{id}",
-                        InvoiceDetails.class,
-                        invoiceDetailsId
-                );
+                for (Long invoiceDetailsId : invoice.getIdInvoiceDetails()) {
+                    InvoiceDetails newDetail = restTemplate.getForObject(
+                            "http://localhost:5000/invoice-details/{id}",
+                            InvoiceDetails.class,
+                            invoiceDetailsId
+                    );
 
-                if (newDetail == null) return ResponseEntity.badRequest().build();
+                    if (newDetail == null) return ResponseEntity.badRequest().build();
 
-                if (!newDetail.getInvoiceIds().contains(oldInvoice.getId())) {
-                    newDetail.getInvoiceIds().add(oldInvoice.getId());
+                    if (!newDetail.getInvoiceIds().contains(oldInvoice.getId())) {
+                        newDetail.getInvoiceIds().add(oldInvoice.getId());
+                    }
+                    System.out.println(newDetail.getInvoiceIds());
+                    Long idProducto = newDetail.getIdProducto();
+                    Products product = restTemplate.getForObject(
+                            "http://localhost:5000/products/{id}",
+                            Products.class,
+                            idProducto
+                    );
+
+                    System.out.println(product);
+                    if (product == null) {
+                        return ResponseEntity.badRequest().build();
+                    }
+                    System.out.println(newDetail);
+                    newDetail.setPrice(product.getPrice() * newDetail.getAmount());
+                    total += newDetail.getPrice();
+                    oldI.setTotal(total);
+
+                    restTemplate.put(
+                            "http://localhost:5000/invoice-details/{id}",
+                            newDetail,
+                            invoiceDetailsId
+                    );
+
                 }
-                Long idProducto = newDetail.getIdProducto();
-                Products product = restTemplate.getForObject(
-                        "http://localhost:5000/products/{id}",
-                        Products.class,
-                        idProducto
-                );
+                oldI.setIdInvoiceDetails(invoice.getIdInvoiceDetails().size() == 0 ? oldI.getIdInvoiceDetails() : invoice.getIdInvoiceDetails());
+                oldI.setIdDelCliente(invoice.getIdDelCliente() == null ? oldI.getIdDelCliente() : invoice.getIdDelCliente());
+                return ResponseEntity.ok(invoiceServices.update(id, oldI));
 
-                System.out.println(product);
-                if (product == null) {
-                    return ResponseEntity.badRequest().build();
-                }
-                System.out.println(newDetail);
-                newDetail.setPrice(product.getPrice() * newDetail.getAmount());
-                total += newDetail.getPrice();
-                oldI.setTotal(newDetail.getPrice());
-                restTemplate.put(
-                        "http://localhost:5000/invoice-details/{id}",
-                        newDetail,
-                        invoiceDetailsId
-                );
+            } catch (Exception error) {
+                System.out.println("wa happen" + error);
+                return ResponseEntity.badRequest().build();
             }
-            oldI.setIdInvoiceDetails(invoice.getIdInvoiceDetails().size() == 0 ? oldI.getIdInvoiceDetails() : invoice.getIdInvoiceDetails());
-            oldI.setIdDelCliente(invoice.getIdDelCliente() == null ? oldI.getIdDelCliente() : invoice.getIdDelCliente());
-            return ResponseEntity.ok(invoiceServices.update(id, oldI));
+        }
+        else{
+            try{
 
-        } catch (Exception error) {
-            System.out.println("wa happen" + error);
-            return ResponseEntity.badRequest().build();
+                oldI.setIdInvoiceDetails(invoice.getIdInvoiceDetails());
+                if(oldI.getIdInvoiceDetails()==null||oldI.getIdInvoiceDetails().size()==0){
+                    System.out.println(invoice);
+                }
+                return ResponseEntity.ok(invoiceServices.update(id, oldI));
+            }catch(Exception error){
+                error.printStackTrace();
+                return ResponseEntity.badRequest().build();
+            }
         }
     }
     //Documentamos con Swagger el delete
@@ -292,13 +327,17 @@ public class InvoiceController {
                             schema = @Schema(implementation = Invoice.class)
                     )}
     )
+
+
     @DeleteMapping("/{id}")
         public ResponseEntity<Invoice> delete(@PathVariable Long id){
             try{
-                Invoice invoiceToDelete= invoiceServices.delete(id);
+                Invoice invoiceToDelete= invoiceServices.findById(id);
                 if(invoiceToDelete == null){
                     return ResponseEntity.notFound().build();
                     }
+
+
                 Long clientId = invoiceToDelete.getIdDelCliente();
                 RestTemplate restTemplate = new RestTemplate();
                 Client client = restTemplate.getForObject(
@@ -315,12 +354,25 @@ public class InvoiceController {
                     );
                 }
                 for (Long invoiceDetailsId : invoiceToDelete.getIdInvoiceDetails()) {
-                    restTemplate.delete(
+                    InvoiceDetails invoiceDetails = restTemplate.getForObject(
                             "http://localhost:5000/invoice-details/{id}",
+                            InvoiceDetails.class,
                             invoiceDetailsId
                     );
+                    invoiceDetails.getInvoiceIds().remove(invoiceToDelete.getId());
+                    invoiceDetails.setPrice(invoiceDetails.getPrice());
+                    invoiceDetails.setAmount(invoiceDetails.getAmount());
+                    invoiceDetails.setIdProducto(invoiceDetails.getIdProducto());
+                    try{restTemplate.put(
+                            "http://localhost:5000/invoice-details/{id}",
+                            invoiceDetails,
+                            invoiceDetailsId
+                    );}
+                    catch (Exception e){
+                        System.out.println(invoiceDetails);
+                    }
                 }
-                return ResponseEntity.ok(invoiceToDelete);
+                return ResponseEntity.ok(invoiceServices.delete(id));
             }catch(Exception error){
                 error.printStackTrace();
                 return ResponseEntity.badRequest().build();
